@@ -134,7 +134,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Applications\Factories\TtsEngineFactory.cs" />
     <Compile Include="Applications\Services\CrawlPipelineManager.cs" />
+    <Compile Include="Applications\Services\MergePipelineManager.cs" />
+    <Compile Include="Applications\Services\TtsPipelineManager.cs" />
     <Compile Include="Core\Enums\SystemEnums.cs" />
     <Compile Include="Core\Interfaces\IContracts.cs" />
     <Compile Include="Core\Models\Entities.cs" />
@@ -143,6 +146,7 @@
     <Compile Include="Infrastructure\Repositories\SqliteNovelRepository.cs" />
     <Compile Include="Infrastructure\Resilience\PolicyProvider.cs" />
     <Compile Include="Infrastructure\Services\LoggerService.cs" />
+    <Compile Include="Infrastructure\TtsEngines\SystemSpeechTtsEngine.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
