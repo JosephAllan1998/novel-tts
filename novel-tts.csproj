@@ -92,6 +92,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Core\Enums\SystemEnums.cs" />
+    <Compile Include="Core\Interfaces\IContracts.cs" />
+    <Compile Include="Core\Models\Entities.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -126,7 +129,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Application\" />
-    <Folder Include="Core\" />
     <Folder Include="Infrastructure\" />
     <Folder Include="Presentation\" />
   </ItemGroup>
