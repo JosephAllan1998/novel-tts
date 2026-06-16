@@ -5,8 +5,61 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:novel_tts"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Novel Text-to-Speech Studio"
+        Height="600" Width="900"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI">
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#2D2D30">
+            <StackPanel Margin="10,20,10,10">
+                <TextBlock Text="TTS STUDIO" Foreground="White" FontSize="20" FontWeight="Bold" Margin="10,0,0,30"/>
+
+                <Button Content="1. Crawler &amp; Parser" Background="#3E3E42" Foreground="White" Height="40" Margin="0,5" BorderThickness="0" Cursor="Hand"/>
+                <Button Content="2. Merge Manager" Background="Transparent" Foreground="LightGray" Height="40" Margin="0,5" BorderThickness="0" Cursor="Hand"/>
+                <Button Content="3. Audio Export" Background="Transparent" Foreground="LightGray" Height="40" Margin="0,5" BorderThickness="0" Cursor="Hand"/>
+                <Button Content="Settings" Background="Transparent" Foreground="LightGray" Height="40" Margin="0,30,0,0" BorderThickness="0" Cursor="Hand"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Column="1" Background="#F5F5F5" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Cấu hình Crawler" FontSize="24" FontWeight="SemiBold" Foreground="#333" Margin="0,0,0,20"/>
+
+            <StackPanel Grid.Row="1" Margin="0,0,0,20">
+                <TextBlock Text="Đường dẫn truyện (TruyenFull):" FontWeight="Medium" Margin="0,0,0,5"/>
+                <TextBox Text="{Binding NovelUrl}" Height="30" Padding="5" Margin="0,0,0,15" IsEnabled="True"/>
+
+                <TextBlock Text="Thư mục lưu trữ dự án:" FontWeight="Medium" Margin="0,0,0,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding SaveDirectory}" Height="30" Padding="5" IsReadOnly="True"/>
+                    <Button Grid.Column="1" Content="Browse..." Command="{Binding BrowseCommand}" Margin="10,0,0,0"/>
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button Content="Bắt đầu Xử lý" Command="{Binding StartProcessCommand}" Width="150" Height="40" Background="#007ACC" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                <Button Content="Tạm dừng / Hủy" Command="{Binding CancelProcessCommand}" Width="150" Height="40" Margin="15,0,0,0" Background="#CC4A31" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="3" Margin="0,20,0,0">
+                <TextBlock Text="{Binding StatusLog}" FontWeight="Medium" Foreground="#666" Margin="0,0,0,10"/>
+                <ProgressBar Value="{Binding ProgressValue}" Maximum="{Binding ProgressMaximum}" Height="20" Foreground="#007ACC" Background="#E0E0E0" BorderThickness="0"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>
