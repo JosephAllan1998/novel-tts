@@ -171,9 +171,8 @@ namespace NovelTTS.Services.Crawler
                     return null;
                 }
 
-                var bytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
-                string encoding = Encoding.UTF8.GetString(bytes);
-                return encoding;
+                string html = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                return html;
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
