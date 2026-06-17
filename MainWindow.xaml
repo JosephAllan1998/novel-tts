@@ -198,9 +198,12 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="56"/>   <!-- Title bar -->
-            <RowDefinition Height="*"/>    <!-- Content -->
-            <RowDefinition Height="32"/>   <!-- Status bar -->
+            <RowDefinition Height="56"/>
+            <!-- Title bar -->
+            <RowDefinition Height="*"/>
+            <!-- Content -->
+            <RowDefinition Height="32"/>
+            <!-- Status bar -->
         </Grid.RowDefinitions>
 
         <!-- ═══ Title Bar ═══ -->
@@ -338,14 +341,22 @@
                                 <TextBlock Grid.Row="0" Text="📊 Tiến Độ" Style="{StaticResource SectionHeader}"/>
 
                                 <Grid Grid.Row="2">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
                                     <TextBlock Text="Danh sách chương:" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
                                     <ProgressBar x:Name="PbCrawl" Grid.Column="1" Value="0" Maximum="100" Margin="8,0"/>
                                     <TextBlock x:Name="TxtCrawlPct" Grid.Column="2" Text="0" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                                 </Grid>
 
                                 <Grid Grid.Row="4">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
                                     <TextBlock Text="Download HTML:" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
                                     <ProgressBar x:Name="PbDownload" Grid.Column="1" Value="0" Maximum="100" Margin="8,0"
                                                  Foreground="{StaticResource AccentGreen}"/>
@@ -353,7 +364,11 @@
                                 </Grid>
 
                                 <Grid Grid.Row="6">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
                                     <TextBlock Text="Parse → TXT:" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
                                     <ProgressBar x:Name="PbParse" Grid.Column="1" Value="0" Maximum="100" Margin="8,0"
                                                  Foreground="{StaticResource AccentOrange}"/>
@@ -433,7 +448,10 @@
                             <StackPanel>
                                 <TextBlock Text="📊 Tiến Độ Merge" Style="{StaticResource SectionHeader}"/>
                                 <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="80"/>
+                                    </Grid.ColumnDefinitions>
                                     <ProgressBar x:Name="PbMerge" Height="14" Value="0" Maximum="100"
                                                  Foreground="{StaticResource AccentOrange}"/>
                                     <TextBlock x:Name="TxtMergeStatus" Grid.Column="1" Margin="12,0,0,0"
@@ -514,7 +532,10 @@
                             <StackPanel>
                                 <TextBlock Text="📊 Tiến Độ TTS" Style="{StaticResource SectionHeader}"/>
                                 <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/></Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="120"/>
+                                    </Grid.ColumnDefinitions>
                                     <ProgressBar x:Name="PbTts" Height="14" Value="0" Maximum="100"
                                                  Foreground="{StaticResource AccentGreen}"/>
                                     <TextBlock x:Name="TxtTtsStatus" Grid.Column="1" Margin="12,0,0,0"
