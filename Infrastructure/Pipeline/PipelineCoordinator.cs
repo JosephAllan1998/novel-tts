@@ -32,15 +32,15 @@ namespace NovelTTS.Infrastructure.Pipeline
 
         // ─── Cancellation ──────────────────────────────────────────────────────
         private CancellationTokenSource _cts;
-        private ManualResetEventSlim    _pauseEvent;   // Set = running, Reset = paused
+        private ManualResetEventSlim _pauseEvent;   // Set = running, Reset = paused
 
         // ─── Dependencies ──────────────────────────────────────────────────────
-        private readonly NovelProject        _project;
-        private readonly DatabaseManager     _db;
-        private readonly ChapterRepository   _chapterRepo;
-        private readonly AppLogger           _logger;
-        private readonly RetryPolicyFactory  _retryFactory;
-        private readonly HttpClientProvider  _httpProvider;
+        private readonly NovelProject _project;
+        private readonly DatabaseManager _db;
+        private readonly ChapterRepository _chapterRepo;
+        private readonly AppLogger _logger;
+        private readonly RetryPolicyFactory _retryFactory;
+        private readonly HttpClientProvider _httpProvider;
 
         // ─── Progress callbacks ────────────────────────────────────────────────
         public event Action<string> OnStatusMessage;
@@ -58,10 +58,10 @@ namespace NovelTTS.Infrastructure.Pipeline
             RetryPolicyFactory retryFactory,
             HttpClientProvider httpProvider)
         {
-            _project      = project      ?? throw new ArgumentNullException(nameof(project));
-            _db           = db           ?? throw new ArgumentNullException(nameof(db));
-            _chapterRepo  = chapterRepo  ?? throw new ArgumentNullException(nameof(chapterRepo));
-            _logger       = logger       ?? throw new ArgumentNullException(nameof(logger));
+            _project = project ?? throw new ArgumentNullException(nameof(project));
+            _db = db ?? throw new ArgumentNullException(nameof(db));
+            _chapterRepo = chapterRepo ?? throw new ArgumentNullException(nameof(chapterRepo));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _retryFactory = retryFactory ?? throw new ArgumentNullException(nameof(retryFactory));
             _httpProvider = httpProvider ?? throw new ArgumentNullException(nameof(httpProvider));
         }
@@ -75,11 +75,11 @@ namespace NovelTTS.Infrastructure.Pipeline
                 _logger.Crawler("PipelineCoordinator.Start", "Pipeline starting",
                     input: $"Project={_project.NovelSlug}");
 
-                _cts        = new CancellationTokenSource();
+                _cts = new CancellationTokenSource();
                 _pauseEvent = new ManualResetEventSlim(true);  // start in running state
 
                 _downloadQueue = new BlockingCollection<Chapter>(boundedCapacity: 200);
-                _parseQueue    = new BlockingCollection<Chapter>(boundedCapacity: 200);
+                _parseQueue = new BlockingCollection<Chapter>(boundedCapacity: 200);
 
                 var crawlerSvc = new ChapterListCrawler(
                     _project, _chapterRepo, _httpProvider, _retryFactory, _logger,
@@ -94,7 +94,7 @@ namespace NovelTTS.Infrastructure.Pipeline
                     _parseQueue, _pauseEvent);
 
                 // Wire progress events
-                crawlerSvc.OnProgress  += (done, total) =>
+                crawlerSvc.OnProgress += (done, total) =>
                 {
                     OnCrawlProgress?.Invoke(done, total);
                     OnStatusMessage?.Invoke($"[Crawl] Tìm được {done}/{total} chương");
@@ -110,12 +110,12 @@ namespace NovelTTS.Infrastructure.Pipeline
                     OnStatusMessage?.Invoke($"[Parse] {done}/{total} chương TXT");
                 };
 
-                _crawlerThread    = new Thread(() => crawlerSvc.Run(_cts.Token))
-                                    { Name = "Thread-Crawler",    IsBackground = true };
+                _crawlerThread = new Thread(() => crawlerSvc.Run(_cts.Token))
+                { Name = "Thread-Crawler", IsBackground = true };
                 _downloaderThread = new Thread(() => downloaderSvc.Run(_cts.Token))
-                                    { Name = "Thread-Downloader", IsBackground = true };
-                _parserThread     = new Thread(() => parserSvc.Run(_cts.Token))
-                                    { Name = "Thread-Parser",     IsBackground = true };
+                { Name = "Thread-Downloader", IsBackground = true };
+                _parserThread = new Thread(() => parserSvc.Run(_cts.Token))
+                { Name = "Thread-Parser", IsBackground = true };
 
                 _crawlerThread.Start();
                 _downloaderThread.Start();
@@ -168,7 +168,7 @@ namespace NovelTTS.Infrastructure.Pipeline
 
                 // Mark queues as complete so threads exit cleanly
                 try { _downloadQueue?.CompleteAdding(); } catch { }
-                try { _parseQueue?.CompleteAdding(); }    catch { }
+                try { _parseQueue?.CompleteAdding(); } catch { }
 
                 // Wait up to 10s for graceful shutdown
                 _crawlerThread?.Join(TimeSpan.FromSeconds(10));
@@ -185,9 +185,9 @@ namespace NovelTTS.Infrastructure.Pipeline
         }
 
         public bool IsRunning =>
-            (_crawlerThread != null    && _crawlerThread.IsAlive)    ||
+            (_crawlerThread != null && _crawlerThread.IsAlive) ||
             (_downloaderThread != null && _downloaderThread.IsAlive) ||
-            (_parserThread != null     && _parserThread.IsAlive);
+            (_parserThread != null && _parserThread.IsAlive);
 
         public void Dispose()
         {

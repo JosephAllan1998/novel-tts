@@ -1,16 +1,17 @@
+using Fizzler.Systems.HtmlAgilityPack;
+using HtmlAgilityPack;
+using NovelTTS.Data.Repositories;
+using NovelTTS.Infrastructure.Http;
+using NovelTTS.Infrastructure.Logging;
+using NovelTTS.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using HtmlAgilityPack;
-using Fizzler.Systems.HtmlAgilityPack;
-using NovelTTS.Data.Repositories;
-using NovelTTS.Infrastructure.Http;
-using NovelTTS.Infrastructure.Logging;
-using NovelTTS.Models;
 
 namespace NovelTTS.Services.Crawler
 {
@@ -21,13 +22,13 @@ namespace NovelTTS.Services.Crawler
     /// </summary>
     public class ChapterListCrawler
     {
-        private readonly NovelProject           _project;
-        private readonly ChapterRepository      _chapterRepo;
-        private readonly HttpClientProvider     _httpProvider;
-        private readonly RetryPolicyFactory     _retryFactory;
-        private readonly AppLogger              _logger;
+        private readonly NovelProject _project;
+        private readonly ChapterRepository _chapterRepo;
+        private readonly HttpClientProvider _httpProvider;
+        private readonly RetryPolicyFactory _retryFactory;
+        private readonly AppLogger _logger;
         private readonly BlockingCollection<Chapter> _downloadQueue;
-        private readonly ManualResetEventSlim   _pauseEvent;
+        private readonly ManualResetEventSlim _pauseEvent;
 
         public event Action<int, int> OnProgress;  // (chaptersFound, estimated)
 
@@ -40,13 +41,13 @@ namespace NovelTTS.Services.Crawler
             BlockingCollection<Chapter> downloadQueue,
             ManualResetEventSlim pauseEvent)
         {
-            _project       = project;
-            _chapterRepo   = chapterRepo;
-            _httpProvider  = httpProvider;
-            _retryFactory  = retryFactory;
-            _logger        = logger;
+            _project = project;
+            _chapterRepo = chapterRepo;
+            _httpProvider = httpProvider;
+            _retryFactory = retryFactory;
+            _logger = logger;
             _downloadQueue = downloadQueue;
-            _pauseEvent    = pauseEvent;
+            _pauseEvent = pauseEvent;
         }
 
         public void Run(CancellationToken ct)
@@ -56,9 +57,9 @@ namespace NovelTTS.Services.Crawler
 
             try
             {
-                int page          = 1;
-                string prevHash   = string.Empty;
-                int totalFound    = 0;
+                int page = 1;
+                string prevHash = string.Empty;
+                int totalFound = 0;
                 int chapterNumber = _chapterRepo.GetMaxChapterNumber(_project.ProjectId) + 1;
                 // Resume: start chapter number after what's already in DB
 
@@ -101,12 +102,12 @@ namespace NovelTTS.Services.Crawler
 
                         var chapter = new Chapter
                         {
-                            ProjectId      = _project.ProjectId,
-                            ChapterNumber  = chapterNumber++,
-                            ChapterTitle   = ExtractChapterTitle(url),
-                            Url            = url,
+                            ProjectId = _project.ProjectId,
+                            ChapterNumber = chapterNumber++,
+                            ChapterTitle = ExtractChapterTitle(url),
+                            Url = url,
                             DownloadStatus = DownloadStatus.Pending,
-                            ParseStatus    = ParseStatus.Pending
+                            ParseStatus = ParseStatus.Pending
                         };
                         newChapters.Add(chapter);
                     }
@@ -170,7 +171,9 @@ namespace NovelTTS.Services.Crawler
                     return null;
                 }
 
-                return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var bytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+                string encoding = Encoding.UTF8.GetString(bytes);
+                return encoding;
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
@@ -239,7 +242,7 @@ namespace NovelTTS.Services.Crawler
                 using (var md5 = System.Security.Cryptography.MD5.Create())
                 {
                     byte[] bytes = System.Text.Encoding.UTF8.GetBytes(text);
-                    byte[] hash  = md5.ComputeHash(bytes);
+                    byte[] hash = md5.ComputeHash(bytes);
                     return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
                 }
             }
