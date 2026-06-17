@@ -37,7 +37,7 @@ namespace NovelTTS.Infrastructure.Http
                     "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
                 _client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Language",
                     "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7");
-                _client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate, br");
+                _client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
                 _client.DefaultRequestHeaders.TryAddWithoutValidation("Connection",       "keep-alive");
                 _client.DefaultRequestHeaders.TryAddWithoutValidation("Cache-Control",    "no-cache");
                 _client.DefaultRequestHeaders.TryAddWithoutValidation("Pragma",           "no-cache");
