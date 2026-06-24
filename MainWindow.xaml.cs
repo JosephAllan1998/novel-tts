@@ -107,6 +107,9 @@ namespace NovelTTS
 
                 TxtProjectName.Text = _currentProject.NovelSlug;
 
+                var ask = MessageBox.Show($"Project '{_currentProject.NovelSlug}' đã được tạo/khởi động.\nBạn có muốn tiếp tục crawl truyện này không?", "Tiếp tục crawl", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (ask == MessageBoxResult.No) return;
+
                 // Build and start pipeline
                 var httpProvider = new HttpClientProvider(30);
                 var retryFactory = new RetryPolicyFactory(retryCount, minDelay);
