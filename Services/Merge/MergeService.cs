@@ -17,13 +17,13 @@ namespace NovelTTS.Services.Merge
     /// </summary>
     public class MergeService
     {
-        private readonly NovelProject       _project;
-        private readonly ChapterRepository  _chapterRepo;
+        private readonly NovelProject _project;
+        private readonly ChapterRepository _chapterRepo;
         private readonly MergeJobRepository _mergeRepo;
-        private readonly AppLogger          _logger;
+        private readonly AppLogger _logger;
 
-        public event Action<int, int>    OnProgress;    // (done, total)
-        public event Action<string>      OnStatusMessage;
+        public event Action<int, int> OnProgress;    // (done, total)
+        public event Action<string> OnStatusMessage;
 
         public MergeService(
             NovelProject project,
@@ -31,10 +31,10 @@ namespace NovelTTS.Services.Merge
             MergeJobRepository mergeRepo,
             AppLogger logger)
         {
-            _project     = project;
+            _project = project;
             _chapterRepo = chapterRepo;
-            _mergeRepo   = mergeRepo;
-            _logger      = logger;
+            _mergeRepo = mergeRepo;
+            _logger = logger;
         }
 
         /// <summary>
@@ -68,18 +68,18 @@ namespace NovelTTS.Services.Merge
                 {
                     if (ct.IsCancellationRequested) break;
 
-                    var batch   = chapters.Skip(i).Take(chaptersPerMerge).ToList();
-                    int from    = batch.First().ChapterNumber;
-                    int to      = batch.Last().ChapterNumber;
+                    var batch = chapters.Skip(i).Take(chaptersPerMerge).ToList();
+                    int from = batch.First().ChapterNumber;
+                    int to = batch.Last().ChapterNumber;
                     string file = Path.Combine(_project.MergeDir, $"{from:D6}_{to:D6}.txt");
 
                     jobs.Add(new MergeJob
                     {
-                        ProjectId      = _project.ProjectId,
-                        FromChapter    = from,
-                        ToChapter      = to,
+                        ProjectId = _project.ProjectId,
+                        FromChapter = from,
+                        ToChapter = to,
                         OutputFilePath = file,
-                        MergeStatus    = MergeStatus.Pending
+                        MergeStatus = MergeStatus.Pending
                     });
                 }
 
@@ -101,9 +101,9 @@ namespace NovelTTS.Services.Merge
             const string method = "MergeService.ExecuteMergeJobs";
             try
             {
-                var jobs  = _mergeRepo.GetPending(_project.ProjectId).ToList();
+                var jobs = _mergeRepo.GetPending(_project.ProjectId).ToList();
                 int total = jobs.Count;
-                int done  = 0;
+                int done = 0;
 
                 _logger.Merge(method, $"Executing {total} merge jobs");
                 OnStatusMessage?.Invoke($"Bắt đầu merge {total} nhóm chương...");
