@@ -393,7 +393,60 @@ namespace NovelTTS
         private void EnsureProjectLoaded()
         {
             if (_currentProject != null) return;
-            MessageBox.Show("Vui lòng tạo/chạy project từ tab Crawler trước.", "Chưa có project");
+
+            // ── Auto-recover from Crawl tab fields ─────────────────────────────
+            try
+            {
+                string url     = TxtUrl.Text.Trim();
+                string workDir = TxtWorkDir.Text.Trim();
+
+                if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(workDir))
+                {
+                    MessageBox.Show(
+                        "Vui lòng điền URL và Thư mục lưu ở tab Crawler, hoặc chạy Crawl trước.",
+                        "Chưa có project", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Derive project folder the same way BtnStart_Click does
+                string slug       = DeriveSlug(url);
+                string projectDir = System.IO.Path.Combine(workDir, slug);
+                string dbFile     = System.IO.Path.Combine(projectDir, "Metadata", "novel.db");
+
+                if (!System.IO.File.Exists(dbFile))
+                {
+                    MessageBox.Show(
+                        $"Chưa tìm thấy database tại:\n{dbFile}\n\nVui lòng chạy Crawl ít nhất một lần trước.",
+                        "Chưa có project", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                _currentProject = _projectService.OpenProject(projectDir);
+                _dbManager      = _projectService.GetDatabaseManager(_currentProject);
+                _logger         = new AppLogger(_currentProject.LogsDir);
+                _chapterRepo    = new ChapterRepository(_dbManager);
+
+                TxtProjectName.Text = _currentProject.NovelSlug;
+                AppendTtsLog($"[INFO] Project '{_currentProject.NovelSlug}' được tải từ disk tự động.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Không thể tải project: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>Mirrors the slug-extraction logic in ProjectService.ExtractSlug.</summary>
+        private static string DeriveSlug(string url)
+        {
+            try
+            {
+                string trimmed = url.TrimEnd('/');
+                int lastSlash  = trimmed.LastIndexOf('/');
+                if (lastSlash >= 0 && lastSlash < trimmed.Length - 1)
+                    return trimmed.Substring(lastSlash + 1).ToLowerInvariant();
+            }
+            catch { }
+            return string.Empty;
         }
 
         private void SetStatus(string msg) { TxtStatus.Text = msg; }

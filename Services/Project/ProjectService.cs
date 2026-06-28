@@ -28,21 +28,35 @@ namespace NovelTTS.Services.Project
             const string method = "ProjectService.CreateProject";
             try
             {
-                _logger.Info("project", method, $"Creating project: {novelUrl}");
+                _logger.Info("project", method, $"Creating/opening project: {novelUrl}");
 
                 string slug       = ExtractSlug(novelUrl);
                 string projectDir = Path.Combine(workBaseDir, slug);
 
-                // Create directory structure
+                // Create directory structure first so the DB path exists
                 CreateDirectories(projectDir);
 
                 var dbManager = new DatabaseManager(Path.Combine(projectDir, "Metadata", "novel.db"));
                 dbManager.InitializeDatabase();
 
+                var novelRepo = new NovelRepository(dbManager);
+
+                // ── Resume guard: reuse existing project record ────────────────
+                NovelProject existing = novelRepo.GetBySlugAndPath(slug, projectDir);
+                if (existing != null)
+                {
+                    // ProjectPath is a computed property from the DB row so set it explicitly
+                    existing.ProjectPath = projectDir;
+                    _logger.Info("project", method,
+                        $"Reusing existing project: slug={slug} id={existing.ProjectId}");
+                    return existing;
+                }
+
+                // ── New project ────────────────────────────────────────────────
                 var novel = new NovelProject
                 {
                     NovelSlug        = slug,
-                    NovelTitle       = slug,    // Will be updated when first page is crawled
+                    NovelTitle       = slug,
                     BaseUrl          = NormaliseUrl(novelUrl),
                     TotalChapters    = 0,
                     ProjectPath      = projectDir,
@@ -51,11 +65,10 @@ namespace NovelTTS.Services.Project
                     UpdatedAt        = DateTime.Now
                 };
 
-                var novelRepo = new NovelRepository(dbManager);
                 novel.ProjectId = novelRepo.Insert(novel);
 
                 _logger.Info("project", method,
-                    $"Project created: slug={slug} path={projectDir} id={novel.ProjectId}");
+                    $"New project created: slug={slug} path={projectDir} id={novel.ProjectId}");
                 return novel;
             }
             catch (Exception ex)

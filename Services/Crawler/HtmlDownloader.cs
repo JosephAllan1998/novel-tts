@@ -106,13 +106,15 @@ namespace NovelTTS.Services.Crawler
                     _logger.Crawler(method, $"Chapter {chapter.ChapterNumber} already on disk – skip download");
                     chapter.HtmlFilePath    = htmlPath;
                     chapter.DownloadStatus  = DownloadStatus.Completed;
-                    _chapterRepo.UpdateDownloadStatus(chapter.ChapterId, DownloadStatus.Completed, htmlPath);
+                    _chapterRepo.UpdateDownloadStatus(chapter.ChapterId, DownloadStatus.Completed, htmlPath,
+                        projectId: chapter.ProjectId, url: chapter.Url);
                     _parseQueue.Add(chapter, ct);
                     return;
                 }
 
                 // Mark as in-progress
-                _chapterRepo.UpdateDownloadStatus(chapter.ChapterId, DownloadStatus.InProgress);
+                _chapterRepo.UpdateDownloadStatus(chapter.ChapterId, DownloadStatus.InProgress,
+                    projectId: chapter.ProjectId, url: chapter.Url);
 
                 _httpProvider.RotateUserAgent();
                 _httpProvider.SetReferer(_project.BaseUrl);
@@ -132,7 +134,8 @@ namespace NovelTTS.Services.Crawler
                 {
                     string errMsg = $"HTTP {(int)response.StatusCode}";
                     _logger.Crawler(method, $"Failed chapter {chapter.ChapterNumber}: {errMsg}", input: chapter.Url);
-                    _chapterRepo.UpdateDownloadStatus(chapter.ChapterId, DownloadStatus.Failed, error: errMsg);
+                    _chapterRepo.UpdateDownloadStatus(chapter.ChapterId, DownloadStatus.Failed, error: errMsg,
+                        projectId: chapter.ProjectId, url: chapter.Url);
                     return;
                 }
 
@@ -146,7 +149,8 @@ namespace NovelTTS.Services.Crawler
 
                 chapter.HtmlFilePath   = htmlPath;
                 chapter.DownloadStatus = DownloadStatus.Completed;
-                _chapterRepo.UpdateDownloadStatus(chapter.ChapterId, DownloadStatus.Completed, htmlPath);
+                _chapterRepo.UpdateDownloadStatus(chapter.ChapterId, DownloadStatus.Completed, htmlPath,
+                    projectId: chapter.ProjectId, url: chapter.Url);
 
                 int count = Interlocked.Increment(ref _downloadedCount);
                 _logger.Crawler(method, $"Chapter {chapter.ChapterNumber} downloaded OK",
@@ -164,7 +168,7 @@ namespace NovelTTS.Services.Crawler
                 try
                 {
                     _chapterRepo.UpdateDownloadStatus(chapter.ChapterId, DownloadStatus.Failed,
-                        error: ex.Message);
+                        error: ex.Message, projectId: chapter.ProjectId, url: chapter.Url);
                 }
                 catch { }
             }

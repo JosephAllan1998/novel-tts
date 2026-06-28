@@ -36,6 +36,31 @@ SELECT last_insert_rowid();";
             }
         }
 
+        /// <summary>
+        /// Returns an existing project matching both slug and project path, or null if not found.
+        /// Used by ProjectService.CreateProject to avoid inserting duplicate Novel rows.
+        /// </summary>
+        public NovelProject GetBySlugAndPath(string slug, string projectPath)
+        {
+            try
+            {
+                const string sql = @"
+SELECT * FROM Novel
+WHERE NovelSlug = @Slug AND ProjectPath = @ProjectPath
+LIMIT 1;";
+                using (var conn = _db.GetConnection())
+                {
+                    return conn.QueryFirstOrDefault<NovelProject>(sql,
+                        new { Slug = slug, ProjectPath = projectPath });
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"[NovelRepository.GetBySlugAndPath] Slug={slug} | {ex.Message}", ex);
+            }
+        }
+
         public NovelProject GetById(int projectId)
         {
             try
