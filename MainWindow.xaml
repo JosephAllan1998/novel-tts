@@ -260,7 +260,8 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="TxtWorkDir" Height="34"/>
+                                    <TextBox x:Name="TxtWorkDir" Height="34"
+                                             Text="D:\01.Work\02.Personal\novel-tts\bin\novel"/>
                                     <Button Grid.Column="1" Content="📁 Duyệt" Margin="8,0,0,0"
                                             Style="{StaticResource BtnSecondary}"
                                             x:Name="BtnBrowse" Click="BtnBrowse_Click"/>
