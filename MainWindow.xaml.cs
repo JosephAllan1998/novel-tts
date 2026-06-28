@@ -292,13 +292,13 @@ namespace NovelTTS
                 _ttsService.OnStatusMessage += msg =>
                     Dispatcher.Invoke(() => AppendTtsLog(msg));
 
-                _ttsService.PlanAudioJobs();
-                _ttsService.Start();
-
                 System.Threading.Tasks.Task.Run(() =>
                 {
                     try
                     {
+                        _ttsService.PlanAudioJobs();
+                        _ttsService.Start();
+
                         while (_ttsService.IsRunning && !_ttsCts.IsCancellationRequested)
                             System.Threading.Thread.Sleep(500);
                         Dispatcher.Invoke(() =>

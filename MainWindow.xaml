@@ -489,18 +489,18 @@
 
                                 <Label   Grid.Row="4" Content="Tốc độ đọc (-10 → 10):" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
-                                    <Slider x:Name="SliderRate" Width="200" Minimum="-10" Maximum="10" Value="0"
+                                    <Slider x:Name="SliderRate" Width="200" Minimum="-10" Maximum="10" Value="1"
                                             TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="TxtRateVal" Margin="10,0,0,0" VerticalAlignment="Center"
-                                               Text="0" Foreground="{StaticResource AccentBlue}"/>
+                                               Text="1" Foreground="{StaticResource AccentBlue}"/>
                                 </StackPanel>
 
                                 <Label   Grid.Row="6" Content="Số threads TTS (1–5):" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
-                                    <Slider x:Name="SliderTtsThreads" Width="150" Minimum="1" Maximum="5" Value="2"
+                                    <Slider x:Name="SliderTtsThreads" Width="150" Minimum="1" Maximum="5" Value="3"
                                             TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="TxtTtsThreadsVal" Margin="10,0,0,0" VerticalAlignment="Center"
-                                               Text="2" Foreground="{StaticResource AccentGreen}"/>
+                                               Text="3" Foreground="{StaticResource AccentGreen}"/>
                                 </StackPanel>
 
                                 <Label   Grid.Row="8" Content="Định dạng output:" Grid.ColumnSpan="1" VerticalAlignment="Center"/>
