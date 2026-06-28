@@ -1,0 +1,55 @@
+@startuml
+title Workflow Chuyên Audio (Text-to-Speech)
+
+actor User
+participant "MergeTtsViewModel" as UI
+box "TtsService" #LightYellow
+participant "Main Thread" as TTS
+participant "TTS Queue\n(BlockingCollection)" as Queue
+participant "Worker Threads\n(Thread Pool)" as Workers
+end box
+participant "System.Speech.Synthesis" as OS_TTS
+participant "NAudio.Lame (MP3)" as Lame
+database "SQLite" as DB
+participant "File System" as FS
+
+== 1. Lên Kế Hoạch (Plan Audio Jobs) ==
+User -> UI : Start TTS Phase
+UI -> TTS : PlanAudioJobs()
+TTS -> DB : Lấy các MergeJob hoàn thành (Completed)
+TTS -> DB : Xóa các bản ghi AudioJob cũ rồi Bulk Insert (Status=Pending)
+
+== 2. Khởi tạo Pipeline (Start) ==
+UI -> TTS : Start(Threads, Format, Voice, Rate)
+TTS -> DB : Lấy các AudioJob (Status=Pending)
+TTS -> Queue : Nạp tất cả vào hàng đợi và đánh dấu CompleteAdding()
+
+loop Cấp phát Worker (Tối đa 5 Luồng)
+    TTS -> Workers: Khởi tạo Thread() chứa OS_TTS Instance
+    Workers -> Workers : Apply Cấu hình Giọng Đọc và Tốc độ
+end
+
+== 3. Xử lý đa luồng (Đa tiến trình) ==
+loop Chờ công việc trong Queue (Parallel)
+    Workers -> Queue : Lấy xuất (Dequeue) AudioJob
+    
+    Workers -> DB : Update Status = InProgress
+    Workers -> FS : Đọc nội dung file Gộp (.txt)
+    FS --> Workers : text
+    
+    alt Nếu cấu hình định dạng WAV
+        Workers -> OS_TTS : SetOutputToWaveFile(filePath)
+        Workers -> OS_TTS : Speak(text)
+    else Nếu cấu hình định dạng MP3
+        Workers -> OS_TTS : SetOutputToWaveFile(tempWav)
+        Workers -> OS_TTS : Speak(text)
+        Workers -> Lame : ConvertWavToMp3(tempWav -> finalMp3)
+        Workers -> FS : File.Delete(tempWav)
+    end
+    
+    Workers -> DB : Update Status = Completed (thành công) / Failed (nếu lỗi)
+    Workers -> UI : Emit Progress Callback (doneCount / totalCount)
+end
+
+TTS -> UI : Thông báo Hoàn Tất toàn bộ
+@enduml
