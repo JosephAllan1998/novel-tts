@@ -116,10 +116,6 @@ namespace NovelTTS.Services.TTS
                 var pendingJobs = _audioRepo.GetPending(_project.ProjectId);
                 _ttsQueue = new BlockingCollection<AudioJob>(boundedCapacity: 50);
 
-                foreach (var job in pendingJobs)
-                    _ttsQueue.Add(job);
-                _ttsQueue.CompleteAdding();
-
                 _workerThreads = new List<Thread>();
                 for (int i = 0; i < _parallelThreads; i++)
                 {
@@ -134,6 +130,10 @@ namespace NovelTTS.Services.TTS
                 }
 
                 _logger.Tts(method, $"{_parallelThreads} TTS worker threads started");
+
+                foreach (var job in pendingJobs)
+                    _ttsQueue.Add(job);
+                _ttsQueue.CompleteAdding();
             }
             catch (Exception ex)
             {
