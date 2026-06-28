@@ -485,7 +485,8 @@
                                            Text="🔊 Cài Đặt TTS (Text-to-Speech)" Style="{StaticResource SectionHeader}"/>
 
                                 <Label   Grid.Row="2" Content="Giọng đọc:" VerticalAlignment="Center"/>
-                                <ComboBox Grid.Row="2" Grid.Column="1" x:Name="CboVoice" Height="34"/>
+                                <ComboBox Grid.Row="2" Grid.Column="1" x:Name="CboVoice" Height="34"
+                                          Background="White" Foreground="Black"/>
 
                                 <Label   Grid.Row="4" Content="Tốc độ đọc (-10 → 10):" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
