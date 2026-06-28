@@ -21,9 +21,9 @@ namespace NovelTTS.Data.Repositories
             {
                 const string sql = @"
 INSERT OR IGNORE INTO AudioJob
-    (ProjectId, MergeJobId, SourceFilePath, OutputFilePath, AudioStatus, Format, ErrorMessage, CreatedAt, UpdatedAt)
+    (ProjectId, MergeJobId, SourceFilePath, OutputFilePath, AudioStatus, Format, CreatedAt, UpdatedAt)
 VALUES
-    (@ProjectId, @MergeJobId, @SourceFilePath, @OutputFilePath, @AudioStatus, @Format, @ErrorMessage,
+    (@ProjectId, @MergeJobId, @SourceFilePath, @OutputFilePath, @AudioStatus, @Format,
      datetime('now'), datetime('now'));";
                 using (var conn = _db.GetConnection())
                 {
@@ -41,9 +41,9 @@ VALUES
         {
             const string sql = @"
 INSERT OR IGNORE INTO AudioJob
-    (ProjectId, MergeJobId, SourceFilePath, OutputFilePath, AudioStatus, Format, ErrorMessage, CreatedAt, UpdatedAt)
+    (ProjectId, MergeJobId, SourceFilePath, OutputFilePath, AudioStatus, Format, CreatedAt, UpdatedAt)
 VALUES
-    (@ProjectId, @MergeJobId, @SourceFilePath, @OutputFilePath, @AudioStatus, @Format, @ErrorMessage,
+    (@ProjectId, @MergeJobId, @SourceFilePath, @OutputFilePath, @AudioStatus, @Format,
      datetime('now'), datetime('now'));";
             try
             {

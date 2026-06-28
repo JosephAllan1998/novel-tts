@@ -21,9 +21,9 @@ namespace NovelTTS.Data.Repositories
             {
                 const string sql = @"
 INSERT OR IGNORE INTO MergeJob
-    (ProjectId, FromChapter, ToChapter, OutputFilePath, MergeStatus, ErrorMessage, CreatedAt, UpdatedAt)
+    (ProjectId, FromChapter, ToChapter, OutputFilePath, MergeStatus, CreatedAt, UpdatedAt)
 VALUES
-    (@ProjectId, @FromChapter, @ToChapter, @OutputFilePath, @MergeStatus, @ErrorMessage,
+    (@ProjectId, @FromChapter, @ToChapter, @OutputFilePath, @MergeStatus,
      datetime('now'), datetime('now'));";
                 using (var conn = _db.GetConnection())
                 {
@@ -41,9 +41,9 @@ VALUES
         {
             const string sql = @"
 INSERT OR IGNORE INTO MergeJob
-    (ProjectId, FromChapter, ToChapter, OutputFilePath, MergeStatus, ErrorMessage, CreatedAt, UpdatedAt)
+    (ProjectId, FromChapter, ToChapter, OutputFilePath, MergeStatus, CreatedAt, UpdatedAt)
 VALUES
-    (@ProjectId, @FromChapter, @ToChapter, @OutputFilePath, @MergeStatus, @ErrorMessage,
+    (@ProjectId, @FromChapter, @ToChapter, @OutputFilePath, @MergeStatus,
      datetime('now'), datetime('now'));";
             try
             {
