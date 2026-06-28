@@ -1,0 +1,51 @@
+@startuml
+title Workflow Lọc và Gộp Chương (MergeService)
+
+actor User
+participant "MergeViewModel / UI" as UI
+participant "MergeService" as Merger
+database "SQLite Database" as DB
+participant "File System (TXT / Merged)" as FS
+
+== 1. Lên Kế Hoạch (Plan Merge Jobs) ==
+User -> UI: Cấu hình Batch Size (ví dụ: 10 chương/file)
+UI -> Merger: PlanMergeJobs(chaptersPerMerge)
+activate Merger
+
+Merger -> DB: Lấy danh sách Chapters đã Parse xong\nWHERE ParseStatus = 'Completed' ORDER BY ChapterNumber
+note right: Đây chính là bước Lọc (Filter). Những chương\nchưa tải xong hay bị lỗi sẽ không được Gộp
+DB --> Merger: List<Chapter>
+Merger -> DB: Xoá các MergeJob cũ của Project (Pending/Failed)
+loop Tạo các Batch
+    Merger -> Merger: Gom nhóm [chaptersPerMerge] chapters
+    Merger -> DB: Tạo bản ghi MergeJob mới (MergeStatus = Pending)
+end
+Merger -> UI: Gửi thống kê kế hoạch (Plan done)
+deactivate Merger
+
+== 2. Thực thi Gộp (Execute Merge Jobs) ==
+User -> UI: Click [Run Merge]
+UI -> Merger: ExecuteMergeJobs()
+activate Merger
+
+Merger -> DB: Lấy các bản ghi Merge (Status = Pending)
+DB --> Merger: List<MergeJob>
+
+loop Từng MergeJob
+    Merger -> DB: Update MergeStatus = InProgress
+    Merger -> DB: Trích xuất List<Chapter> trong phạm vi của Job
+    
+    loop Từng Chapter
+        Merger -> FS: Đọc file {Padding_ID}.txt 
+        FS --> Merger: Nội dung văn bản
+        Merger -> Merger: Nối vào StringBuilder + Thêm vạch phân cách
+    end    
+    
+    Merger -> FS: Ghi file tổng hợp vào /Merged/{From}-{To}.txt
+    Merger -> DB: Update MergeJob Status = Completed (thành công) / Failed (lỗi)
+    Merger -> UI: Emit event báo tiến độ
+end
+Merger -> UI: Thông báo Hoàn thành
+deactivate Merger
+
+@enduml

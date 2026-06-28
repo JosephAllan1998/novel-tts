@@ -1,0 +1,63 @@
+@startuml
+title Workflow Crawl - Tải và Bóc Tách Truyện
+
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor User
+box "PipelineCoordinator" #LightCyan
+participant "ChapterListCrawler\n[Thread 1]" as Crawler
+participant "DownloadQueue\n(BlockingCollection)" as DLQueue
+participant "HtmlDownloader\n[Thread 2]" as Downloader
+participant "ParseQueue\n(BlockingCollection)" as ParseQueue
+participant "HtmlParser\n[Thread 3]" as Parser
+end box
+
+database SQLite as DB
+participant "File System" as FS
+
+User -> PipelineCoordinator : Start()
+activate PipelineCoordinator
+
+PipelineCoordinator -> DLQueue : Init (Max 200 items)
+PipelineCoordinator -> ParseQueue : Init (Max 200 items)
+
+PipelineCoordinator -> Crawler : Run Thread 1
+PipelineCoordinator -> Downloader : Run Thread 2
+PipelineCoordinator -> Parser : Run Thread 3
+
+== Thread 1: Chapter List Crawler ==
+Crawler -> Crawler : Tính trang & hash (chống lặp)
+loop Lặp từng trang Pagination
+    Crawler -> Crawler: HTTP GET trang List Chapter
+    Crawler -> Crawler: CSS Selector lấy URL chương
+    alt Chương chưa có trong DB?
+        Crawler -> DB: Lưu thông tin Chapter (Status = Pending)
+        Crawler -> DLQueue: Push (Chương) vào Hàng đợi
+    end
+end
+Crawler -> DLQueue: Đánh dấu CompleteAdding() (Hết việc)
+
+== Thread 2: HTML Downloader ==
+loop Chờ DLQueue
+    Downloader -> DLQueue: Dequeue (Chương)
+    Downloader -> Downloader: HTTP GET chi tiết chương (Retry bằng Polly)
+    Downloader -> FS: Ghi file thô vào thư mục /Html/{Padding}.html
+    Downloader -> DB: Update DownloadStatus = Completed
+    Downloader -> ParseQueue: Push (Chương) vào Hàng đợi Parse
+end
+Downloader -> ParseQueue: Đánh dấu CompleteAdding()
+
+== Thread 3: HTML Parser ==
+loop Chờ ParseQueue
+    Parser -> ParseQueue: Dequeue (Chương)
+    Parser -> FS: Đọc file HTML chi tiết
+    Parser -> Parser: Xoá thẻ script, iframe, quảng cáo.\nTrích xuất thẻ chứa Content
+    Parser -> FS: Ghi file text sạch vào thư mục /Txt/{Padding}.txt
+    Parser -> DB: Update ParseStatus = Completed 
+end
+
+PipelineCoordinator -> User: Cập nhật sự kiện Done / Resume / Pause
+deactivate PipelineCoordinator
+
+@enduml
