@@ -15,21 +15,23 @@ namespace NovelTTS.Data.Repositories
             _db = db;
         }
 
+        // ─── Insert ────────────────────────────────────────────────────────────
+
         public void Insert(Chapter chapter)
         {
             try
             {
                 const string sql = @"
 INSERT OR IGNORE INTO Chapter
-    (ProjectId, ChapterNumber, ChapterTitle, Url, DownloadStatus, ParseStatus,
-     HtmlFilePath, TxtFilePath, DownloadError, ParseError, CreatedAt, UpdatedAt)
+    (ProjectId, ChapterNumber, ChapterTitle, Url, DownloadStatus, ParseStatus, CreatedAt, UpdatedAt)
 VALUES
     (@ProjectId, @ChapterNumber, @ChapterTitle, @Url, @DownloadStatus, @ParseStatus,
-     @HtmlFilePath, @TxtFilePath, @DownloadError, @ParseError,
-     datetime('now'), datetime('now'));";
+     datetime('now'), datetime('now'));
+SELECT last_insert_rowid();";
                 using (var conn = _db.GetConnection())
                 {
-                    conn.Execute(sql, chapter);
+                    long id = (long)conn.ExecuteScalar(sql, chapter);
+                    if (id > 0) chapter.ChapterId = (int)id;
                 }
             }
             catch (Exception ex)
@@ -39,28 +41,69 @@ VALUES
             }
         }
 
+        /// <summary>
+        /// Inserts each chapter individually so that the generated ChapterId is written
+        /// back into the in-memory object. This is critical: callers (HtmlDownloader,
+        /// HtmlParser) use chapter.ChapterId to call UpdateDownloadStatus /
+        /// UpdateParseStatus — if ChapterId is 0 those updates hit no rows.
+        /// Using INSERT OR IGNORE means duplicate URLs for the same project are silently
+        /// skipped; the existing row's ID is then fetched via GetByUrl.
+        /// </summary>
         public void BulkInsert(IEnumerable<Chapter> chapters)
         {
-            const string sql = @"
+            const string insertSql = @"
 INSERT OR IGNORE INTO Chapter
-    (ProjectId, ChapterNumber, ChapterTitle, Url, DownloadStatus, ParseStatus,
-     HtmlFilePath, TxtFilePath, DownloadError, ParseError, CreatedAt, UpdatedAt)
+    (ProjectId, ChapterNumber, ChapterTitle, Url, DownloadStatus, ParseStatus, CreatedAt, UpdatedAt)
 VALUES
     (@ProjectId, @ChapterNumber, @ChapterTitle, @Url, @DownloadStatus, @ParseStatus,
-     @HtmlFilePath, @TxtFilePath, @DownloadError, @ParseError,
      datetime('now'), datetime('now'));";
+
+            const string idSql = @"
+SELECT ChapterId FROM Chapter
+WHERE ProjectId = @ProjectId AND Url = @Url
+LIMIT 1;";
+
             try
             {
                 using (var conn = _db.GetConnection())
                 using (var tx = conn.BeginTransaction())
                 {
-                    conn.Execute(sql, chapters, tx);
+                    foreach (var chapter in chapters)
+                    {
+                        conn.Execute(insertSql, chapter, tx);
+                        // Always re-fetch the real PK (handles both new inserts and
+                        // pre-existing rows that were skipped by INSERT OR IGNORE)
+                        int chapterId = conn.ExecuteScalar<int>(idSql,
+                            new { chapter.ProjectId, chapter.Url }, tx);
+                        chapter.ChapterId = chapterId;
+                    }
                     tx.Commit();
                 }
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"[ChapterRepository.BulkInsert] {ex.Message}", ex);
+            }
+        }
+
+        // ─── Queries ───────────────────────────────────────────────────────────
+
+        public Chapter GetByUrl(int projectId, string url)
+        {
+            try
+            {
+                const string sql = @"
+SELECT * FROM Chapter
+WHERE ProjectId = @ProjectId AND Url = @Url
+LIMIT 1;";
+                using (var conn = _db.GetConnection())
+                {
+                    return conn.QueryFirstOrDefault<Chapter>(sql, new { ProjectId = projectId, Url = url });
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"[ChapterRepository.GetByUrl] {ex.Message}", ex);
             }
         }
 
@@ -153,26 +196,62 @@ ORDER BY ChapterNumber ASC;";
             }
         }
 
-        public void UpdateDownloadStatus(int chapterId, DownloadStatus status, string htmlFilePath = "", string error = "")
+        // ─── Updates ───────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Updates download status. Uses ChapterId when available (> 0),
+        /// otherwise falls back to (ProjectId, Url) to handle cases where
+        /// the chapter came from an in-memory queue before the DB ID was set.
+        /// </summary>
+        public void UpdateDownloadStatus(int chapterId, DownloadStatus status,
+            string htmlFilePath = "", string error = "",
+            int projectId = 0, string url = "")
         {
             try
             {
-                const string sql = @"
+                string sql;
+                object param;
+
+                if (chapterId > 0)
+                {
+                    sql = @"
 UPDATE Chapter
 SET DownloadStatus = @Status,
     HtmlFilePath   = @HtmlFilePath,
     DownloadError  = @Error,
     UpdatedAt      = datetime('now')
 WHERE ChapterId = @ChapterId;";
+                    param = new
+                    {
+                        Status       = (int)status,
+                        HtmlFilePath = htmlFilePath ?? "",
+                        Error        = error ?? "",
+                        ChapterId    = chapterId
+                    };
+                }
+                else
+                {
+                    // Fallback: key on (ProjectId, Url)
+                    sql = @"
+UPDATE Chapter
+SET DownloadStatus = @Status,
+    HtmlFilePath   = @HtmlFilePath,
+    DownloadError  = @Error,
+    UpdatedAt      = datetime('now')
+WHERE ProjectId = @ProjectId AND Url = @Url;";
+                    param = new
+                    {
+                        Status       = (int)status,
+                        HtmlFilePath = htmlFilePath ?? "",
+                        Error        = error ?? "",
+                        ProjectId    = projectId,
+                        Url          = url ?? ""
+                    };
+                }
+
                 using (var conn = _db.GetConnection())
                 {
-                    conn.Execute(sql, new
-                    {
-                        Status      = (int)status,
-                        HtmlFilePath = htmlFilePath ?? "",
-                        Error       = error ?? "",
-                        ChapterId   = chapterId
-                    });
+                    conn.Execute(sql, param);
                 }
             }
             catch (Exception ex)
@@ -182,26 +261,58 @@ WHERE ChapterId = @ChapterId;";
             }
         }
 
-        public void UpdateParseStatus(int chapterId, ParseStatus status, string txtFilePath = "", string error = "")
+        /// <summary>
+        /// Updates parse status. Uses ChapterId when available (> 0),
+        /// otherwise falls back to (ProjectId, Url).
+        /// </summary>
+        public void UpdateParseStatus(int chapterId, ParseStatus status,
+            string txtFilePath = "", string error = "",
+            int projectId = 0, string url = "")
         {
             try
             {
-                const string sql = @"
+                string sql;
+                object param;
+
+                if (chapterId > 0)
+                {
+                    sql = @"
 UPDATE Chapter
 SET ParseStatus  = @Status,
     TxtFilePath  = @TxtFilePath,
     ParseError   = @Error,
     UpdatedAt    = datetime('now')
 WHERE ChapterId = @ChapterId;";
-                using (var conn = _db.GetConnection())
-                {
-                    conn.Execute(sql, new
+                    param = new
                     {
                         Status      = (int)status,
                         TxtFilePath = txtFilePath ?? "",
                         Error       = error ?? "",
                         ChapterId   = chapterId
-                    });
+                    };
+                }
+                else
+                {
+                    sql = @"
+UPDATE Chapter
+SET ParseStatus  = @Status,
+    TxtFilePath  = @TxtFilePath,
+    ParseError   = @Error,
+    UpdatedAt    = datetime('now')
+WHERE ProjectId = @ProjectId AND Url = @Url;";
+                    param = new
+                    {
+                        Status      = (int)status,
+                        TxtFilePath = txtFilePath ?? "",
+                        Error       = error ?? "",
+                        ProjectId   = projectId,
+                        Url         = url ?? ""
+                    };
+                }
+
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Execute(sql, param);
                 }
             }
             catch (Exception ex)
@@ -210,6 +321,8 @@ WHERE ChapterId = @ChapterId;";
                     $"[ChapterRepository.UpdateParseStatus] ChapterId={chapterId} Status={status} | {ex.Message}", ex);
             }
         }
+
+        // ─── Helpers ───────────────────────────────────────────────────────────
 
         public bool ExistsByUrl(int projectId, string url)
         {

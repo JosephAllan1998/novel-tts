@@ -86,7 +86,8 @@ namespace NovelTTS.Services.Parser
                 if (File.Exists(txtPath) && new FileInfo(txtPath).Length > 10)
                 {
                     _logger.Parser(method, $"Chapter {chapter.ChapterNumber} TXT already exists – skip");
-                    _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.Completed, txtPath);
+                    _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.Completed, txtPath,
+                        projectId: chapter.ProjectId, url: chapter.Url);
                     return;
                 }
 
@@ -94,11 +95,13 @@ namespace NovelTTS.Services.Parser
                 {
                     _logger.Parser(method, $"HTML file not found: {chapter.HtmlFilePath}");
                     _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.Failed,
-                        error: "HTML file not found");
+                        error: "HTML file not found",
+                        projectId: chapter.ProjectId, url: chapter.Url);
                     return;
                 }
 
-                _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.InProgress);
+                _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.InProgress,
+                    projectId: chapter.ProjectId, url: chapter.Url);
 
                 string html = File.ReadAllText(chapter.HtmlFilePath, Encoding.UTF8);
                 string text = ExtractContent(html, chapter);
@@ -107,7 +110,8 @@ namespace NovelTTS.Services.Parser
                 {
                     _logger.Parser(method, $"No content extracted for chapter {chapter.ChapterNumber}");
                     _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.Failed,
-                        error: "No content extracted");
+                        error: "No content extracted",
+                        projectId: chapter.ProjectId, url: chapter.Url);
                     return;
                 }
 
@@ -117,7 +121,8 @@ namespace NovelTTS.Services.Parser
 
                 File.WriteAllText(txtPath, text, Encoding.UTF8);
 
-                _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.Completed, txtPath);
+                _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.Completed, txtPath,
+                    projectId: chapter.ProjectId, url: chapter.Url);
 
                 int count = Interlocked.Increment(ref _parsedCount);
                 _logger.Parser(method, $"Chapter {chapter.ChapterNumber} parsed OK – {text.Length} chars",
@@ -130,7 +135,8 @@ namespace NovelTTS.Services.Parser
                 _logger.Error(method, ex, input: chapter.HtmlFilePath ?? "");
                 try
                 {
-                    _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.Failed, error: ex.Message);
+                    _chapterRepo.UpdateParseStatus(chapter.ChapterId, ParseStatus.Failed, error: ex.Message,
+                        projectId: chapter.ProjectId, url: chapter.Url);
                 }
                 catch { }
             }
